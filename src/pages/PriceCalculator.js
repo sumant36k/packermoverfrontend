@@ -4,7 +4,6 @@ const PriceCalculator = () => {
   const [distance, setDistance] = useState("");
   const [cftIndex, setCftIndex] = useState("");
   const [price, setPrice] = useState(null);
- 
 
   const getPrice = async () => {
     try {

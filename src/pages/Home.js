@@ -1,10 +1,6 @@
-
 import React, { useState } from "react";
 import "../styles/Home.css";
 import Modal from "../pages/Model";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapMarkerAlt, faRoute, faLocationArrow } from "@fortawesome/free-solid-svg-icons";
-
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,7 +17,6 @@ const Home = () => {
   const [ShiftingToSuggetion, setShiftingToSuggetion] = useState([]);
   const [distance, setDistance] = useState(0); // New state for distance
   const [activeTab, setActiveTab] = useState('within');
-  const [selectedCity, setSelectedCity] = useState(""); // Store the selected city
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
@@ -30,18 +25,13 @@ const Home = () => {
   };
   const showTab = (tab) => {
     setActiveTab(tab);
-    setFromAddress('');
-    setToAddress('');
-  };
+};
 
   // Function to fetch address suggestions from LocationIQ (with Autocomplete)
-  const fetchAddressSuggestions = async (query, setSuggestions, selectedCity = "") => {
+  const fetchAddressSuggestions = async (query, setSuggestions) => {
     if (query.length < 3) return; // Only fetch after 3+ characters
 
-    // Append the selected city if available
-    const searchQuery = selectedCity ? `${query}, ${selectedCity}` : query;
-
-    const url = `https://us1.locationiq.com/v1/autocomplete?key=pk.b4e2b7e7c1b30fdf43ca13e28d713710&q=${searchQuery}`;
+    const url = `https://us1.locationiq.com/v1/autocomplete?key=pk.b4e2b7e7c1b30fdf43ca13e28d713710&q=${query}`;
     const options = { method: 'GET', headers: { accept: 'application/json' } };
 
     try {
@@ -52,7 +42,6 @@ const Home = () => {
       console.error("Error fetching address:", error);
     }
   };
-
 
   // Function to fetch coordinates from LocationIQ API
   const fetchCoordinates = async (address) => {
@@ -83,7 +72,7 @@ const Home = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
   };
-
+  
   const handleCheckPrices = async (e) => {
     e.preventDefault();
     if (!fromAddress || !toAddress) {
@@ -102,28 +91,9 @@ const Home = () => {
       setError("Could not fetch coordinates for the given addresses.");
     }
 
-    openModal();
+    openModal();    
   };
-  const handleCheckPrices1 = async (e) => {
-    e.preventDefault();
-    if (!fromAddress || !toAddress) {
-      setError("Please fill both From Address and To Address.");
-      return;
-    }
-    setError("");
 
-    const fromCoords = await fetchCoordinates(fromAddress);
-    const toCoords = await fetchCoordinates(toAddress);
-
-    if (fromCoords && toCoords) {
-      const dist = calculateDistance(fromCoords.lat, fromCoords.lon, toCoords.lat, toCoords.lon);
-      setDistance(dist.toFixed(2));
-    } else {
-      setError("Could not fetch coordinates for the given addresses.");
-    }
-
-    openModal();
-  };
   return (
     <div className="home">
       {/* Header Section */}
@@ -159,146 +129,186 @@ const Home = () => {
           <div className="form-container">
             <h2>What's your moving plan?</h2>
             <div className="tabs">
-              <button className={activeTab === 'within' ? 'active' : ''} onClick={() => showTab('within')}>Within City</button>
-              <button className={activeTab === 'between' ? 'active' : ''} onClick={() => showTab('between')}>Between Cities</button>
-            </div>
-            { /*<p>Provide your details to get the best prices for your move.</p>*/}
-            <form className="relocation-form">
-
-
-              <div style={{ display: activeTab === 'within' ? 'block' : 'none' }}>
-                <p>Select City</p>
-                {/* Select city combo*/}
-                <div className="form-group">
-                  <select
-                    required
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                  >
-                    <option value="" disabled>Select City</option>
-                    <option value="Bangalore">Bangalore</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Chennai">Chennai</option>
-                    <option value="Hyderabad">Hyderabad</option>
-                  </select>
-
+                    <button className={activeTab === 'within' ? 'active' : ''} onClick={() => showTab('within')}>Within City</button>
+                    <button className={activeTab === 'between' ? 'active' : ''} onClick={() => showTab('between')}>Between Cities</button>
                 </div>
-                <p>Search your Locality</p>
-
-
-              </div>
-              <div style={{ display: activeTab === 'between' ? 'block' : 'none' }}>
-                <p>Search your City</p>
-
-
-                {error && <p className="error">{error}</p>}
-
-              </div>
-              <div className="form-group location-input">
-                <FontAwesomeIcon icon={faMapMarkerAlt} className="input-icon" />
-                <input
+           { /*<p>Provide your details to get the best prices for your move.</p>*/}
+            <form className="relocation-form" onSubmit={handleCheckPrices}>
+             
+            
+                    <div style={{ display: activeTab === 'within' ? 'block' : 'none' }}>
+                    <p>Select City</p>
+                      {/* Select city combo*/}
+                    <div className="form-group">
+                                <select required >
+                                    <option value="" disabled>Select City</option>
+                                    <option value="Bangalore">Bangalore</option>
+                                    <option value="Mumbai">Mumbai</option>
+                                    <option value="Pune">Delhi</option>
+                                    <option value="Chennai">Chennai</option>
+                                    <option value="Hyderabad">Hyderabad</option>
+                                    
+                                </select>
+                   </div>
+                            <p>Search your Locality</p>
+                            <div className="form-group">
+                              {/* Shifting From Input */}
+                            
+                                <input
+                                    type="text"
+                                    placeholder="Shifting From"
+                                    value={ShiftingFrom}
+                                    onChange={(e) => {
+                                    setShiftingFrom(e.target.value);
+                                    fetchAddressSuggestions(e.target.value, setShiftFromSuggestion);
+                                            }}
+                                     required
+                                  />
+                           {/* Display Suggestions */}
+                              {shiftFromSuggestion.length > 0 && (
+                                   <ul className="suggestions">
+                                   {shiftFromSuggestion.map((place, index) => (
+                                  <li key={index} onClick={() => {
+                                  setShiftingFrom(place.display_name);
+                                  setShiftFromSuggestion([]);
+                                    }}>
+                                 {place.display_name}
+                                </li>
+                                  ))}
+                                  </ul>
+                             )}
+                            </div>
+                            <div className="form-group">
+                              {/* Shifting To Input */}
+                                <input type="text" placeholder="Shifting To"
+                                  value={ShiftingTo}
+                                    onChange={(e) => {
+                                    setShiftingTo(e.target.value);
+                                    fetchAddressSuggestions(e.target.value, setShiftingToSuggetion);
+                                            }}
+                                 required />
+                                  {/* Display Suggestions */}
+                              {ShiftingToSuggetion.length > 0 && (
+                                   <ul className="suggestions">
+                                   {ShiftingToSuggetion.map((place, index) => (
+                                  <li key={index} onClick={() => {
+                                  setShiftingTo(place.display_name);
+                                  setShiftingToSuggetion([]);
+                                    }}>
+                                 {place.display_name}
+                                </li>
+                                  ))}
+                                  </ul>
+                             )}
+                            </div>
+                            <div className="form-group">
+                             {/* SMobile number Input */}
+                                <input type="text" placeholder="Mobile number" 
+                                 value={MobileNumber}
+                                    onChange={(e) => {
+                                    setMobileNumber(e.target.value);
+                                   
+                                  }}
+                                
+                                required />
+                            </div>
+                            <button type="submit" className="submit-btn">Check Prices</button>
+                     
+                    </div>
+                   <div style={{ display: activeTab === 'between' ? 'block' : 'none' }}>
+                   <p>Search your City</p>
+              <div className="form-group">
+                 <input
                   type="text"
-                  placeholder="Shifting From"
+                  placeholder="Search source city"
                   value={fromAddress}
                   onChange={(e) => {
                     setFromAddress(e.target.value);
-                    if (activeTab === 'within') {
-                      fetchAddressSuggestions(e.target.value, setShiftFromSuggestion, selectedCity);
-                    } else {
-                      fetchAddressSuggestions(e.target.value, setShiftFromSuggestion);
-                    }
+                    fetchAddressSuggestions(e.target.value, setFromSuggestions);
                   }}
-
                   required
                 />
-                {shiftFromSuggestion.length > 0 && (
+                {/* Display Suggestions */}
+                {fromSuggestions.length > 0 && (
                   <ul className="suggestions">
-                    {shiftFromSuggestion.map((place, index) => (
+                    {fromSuggestions.map((place, index) => (
                       <li key={index} onClick={() => {
                         setFromAddress(place.display_name);
-                        setShiftFromSuggestion([]);
+                        setFromSuggestions([]);
                       }}>
-                        <FontAwesomeIcon icon={faLocationArrow} className="suggestion-icon" />
                         {place.display_name}
                       </li>
                     ))}
                   </ul>
                 )}
-              </div>
+                       </div>
 
-              {/* Route icon between fields */}
-              <FontAwesomeIcon icon={faRoute} className="route-icon" />
-
-              <div className="form-group location-input">
-                <FontAwesomeIcon icon={faMapMarkerAlt} className="input-icon" />
+              {/* To Address Input */}
+              <div className="form-group">
+              {/* <i class="fas fa-map-marker-alt icon"></i> */}
                 <input
                   type="text"
-                  placeholder="Shifting To"
+                  placeholder="Search destination city"
                   value={toAddress}
                   onChange={(e) => {
                     setToAddress(e.target.value);
-                    if (activeTab === 'within') {
-                      fetchAddressSuggestions(e.target.value, setShiftingToSuggetion, selectedCity);
-                    } else {
-                      fetchAddressSuggestions(e.target.value, setShiftFromSuggestion);
-                    }
-                    fetchAddressSuggestions(e.target.value, setShiftingToSuggetion, selectedCity);
+                    fetchAddressSuggestions(e.target.value, setToSuggestions);
                   }}
                   required
                 />
-                {ShiftingToSuggetion.length > 0 && (
+                {/* Display Suggestions */}
+                {toSuggestions.length > 0 && (
                   <ul className="suggestions">
-                    {ShiftingToSuggetion.map((place, index) => (
+                    {toSuggestions.map((place, index) => (
                       <li key={index} onClick={() => {
                         setToAddress(place.display_name);
-                        setShiftingToSuggetion([]);
+                        setToSuggestions([]);
                       }}>
-                        <FontAwesomeIcon icon={faLocationArrow} className="suggestion-icon" />
                         {place.display_name}
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
+           
               {/* Shifting Date */}
               <div className="form-group">
-                <p>Select Shifting Date</p>
-                <input
-                  type="date"
-                  placeholder="Shifting date"
-                  value={shiftingDate}
-                  onFocus={(e) => (e.target.type = 'date')}
-                  onBlur={(e) => (e.target.type = 'text')}
-                  onChange={(e) => setShiftingDate(e.target.value)}
-                  required
-                />
+              <p>Select Shifting Date</p>
+              <input
+                     type="date"
+                     placeholder="Shifting date"
+                     value={shiftingDate}
+                     onFocus={(e) => (e.target.type = 'date')}
+                     onBlur={(e) => (e.target.type = 'text')}
+                     onChange={(e) => setShiftingDate(e.target.value)}
+                     required
+              />
               </div>
-              <button type="button" className="submit-btn" onClick={handleCheckPrices1}>
+
+              {error && <p className="error">{error}</p>}
+
+              <button type="submit" className="submit-btn">
                 Check Prices
               </button>
-
+              </div>
+              
             </form>
           </div>
         </div>
       </main>
 
       {/* Modal Component */}
-      <Modal isOpen={isModalOpen}
-        closeModal={closeModal}
-        distance={distance}
-        activeTab={activeTab}
-        shiftingDate={shiftingDate}
-        fromAddress ={fromAddress}
-        toAddress ={toAddress}
+      <Modal isOpen={isModalOpen} 
+      closeModal={closeModal}
+      distance={distance}
       />
 
       {/* Footer Section */}
       <footer className="footer">
         <div className="footer-container">
-          <div className="footer-logo">
+            <div className="footer-logo">
             <h2>Packers and Movers</h2>
-          </div>
+         </div>
           <div className="footer-links">
             <a href="#terms">Terms & Conditions</a>
             <a href="#privacy">Privacy Policy</a>
