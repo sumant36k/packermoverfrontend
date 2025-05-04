@@ -3,80 +3,77 @@ import axios from "axios";
 import "../styles/Modal.css"; // Add a separate CSS file for modal styling
 import { useNavigate } from "react-router-dom";
 
-const Modal = ({ isOpen, closeModal, distance, activeTab, shiftingDate, fromAddress, toAddress }) => {
+const Modal = ({ isOpen, closeModal,distance }) => {
   const navigate = useNavigate();
   const [mobileNumber, setMobileNumber] = useState("");
-  const [continueProcess, setContinueProcess] = useState(false);
+const [continute,setContinue] =useState(false)
+useEffect (()=>{
+  if(continute)
+  {
 
-  useEffect(() => {
-    if (continueProcess) {
-      handleContinue();
-    }
-  }, [continueProcess]);
-
-  const handleContinue = async () => {
-    if (!mobileNumber || mobileNumber.length !== 10) {
-      alert("Please enter a valid 10-digit mobile number.");
+  
+  // const handleContinue = async () => {
+    if (!mobileNumber) {
+      alert("Please enter a valid mobile number.");
       return;
     }
-
+    
     try {
-      // 🔹 Step 1: Check if Mobile Number Exists
-      const checkResponse = await axios.get(`https://localhost:7148/api/User/CheckUser/${mobileNumber}`);
-
-      if (checkResponse.status === 200) {
-        // User exists ✅, store userID and navigate
-        localStorage.setItem("userID", checkResponse.data.userID);
-         alert("User exists, proceeding with booking:", checkResponse.data);
-        console.log("User exists, proceeding with booking:", checkResponse.data);
-        closeModal();
-        navigate(`/booking?distance=${distance}&activeTab=${activeTab}&shiftingDate=${shiftingDate}`);
-      } else {
-        // 🔹 Step 2: If User Does Not Exist, Create New User
-        const userDetails = {
+      const response =  axios.post(
+        "https://localhost:7148/api/User/CreateUser",
+        {
           name: "Default Name",
           phoneNumber: mobileNumber,
           email: "default@example.com",
           password: "defaultPassword",
-          Address: {
-            fromAddress: fromAddress,
-            toAddress: toAddress,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
           },
-        };
-
-        const createResponse = await axios.post(
-          "https://localhost:7148/api/User/CreateUser",
-          userDetails,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-
-        if (createResponse.status === 200 || createResponse.status === 201) {
-          // New user created ✅, store userID and navigate
-          localStorage.setItem("userID", createResponse.data.userID);
-          localStorage.setItem("addressID", createResponse.data.addressID);
-          console.log("New user created successfully:", createResponse.data);
-          closeModal();
-          navigate(`/booking?distance=${distance}&activeTab=${activeTab}&shiftingDate=${shiftingDate}`);
-        } else {
-          alert("Failed to create user. Unexpected response from server.");
         }
-      }
+      ).then((response)=>{
+
+        if (response.status === 200 || response.status === 201) {
+          // User saved successfully
+          localStorage.setItem("userID", response.data.userID); // Store userID
+          console.log("User saved successfully:", response.data);
+  
+          // Close the modal and navigate to the booking page
+          closeModal();
+          //navigate("/booking");
+          navigate(`/booking?distance=${distance}`);
+
+        } else {
+          console.error("Unexpected response:", response);
+          alert("Failed to save the mobile number. Unexpected response from server.");
+        }
+      });
+
+      
     } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while processing your request.");
+      // Log detailed error information
+      if (error.response) {
+        // Server responded with a status code outside the 2xx range
+        console.error("Backend error:", error.response.data);
+        alert(
+          `Failed to save the mobile number. Server responded with status: ${error.response.status}`
+        );
+      } else if (error.request) {
+        // No response received from server
+        console.error("No response received:", error.request);
+        alert("Failed to connect to the server. Please try again later.");
+      } else {
+        // Error occurred while setting up the request
+        console.error("Request setup error:", error.message);
+        alert("An error occurred. Please try again.");
+      }
     }
-  };
+  }
+ 
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-
-    // Allow only numbers and limit to 10 digits
-    if (/^\d{0,10}$/.test(value)) {
-      setMobileNumber(value);
-    }
-  };
+},[continute]);
+ 
 
   if (!isOpen) return null;
 
@@ -97,11 +94,11 @@ const Modal = ({ isOpen, closeModal, distance, activeTab, shiftingDate, fromAddr
               type="tel"
               placeholder="Enter Mobile Number"
               value={mobileNumber}
-              onChange={handleInputChange}
+              onChange={(e) => setMobileNumber(e.target.value)}
               required
             />
           </div>
-          <button type="button" className="modal-submit-btn" onClick={() => setContinueProcess(true)}>
+          <button type="button" className="modal-submit-btn" onClick={(e)=>setContinue(true)}>
             Continue
           </button>
         </form>
